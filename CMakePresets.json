@@ -7,7 +7,7 @@
     },
     "configurePresets": [
         {
-            "name": "release",
+            "name": "release-local",
             "displayName": "Release (Clang + Ninja + vcpkg)",
             "description": "Configure using Ninja, clang-cl, and vcpkg.",
             "generator": "Ninja",
@@ -16,15 +16,58 @@
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_C_COMPILER": "clang-cl",
                 "CMAKE_CXX_COMPILER": "clang-cl",
-                "CMAKE_TOOLCHAIN_FILE": "G:/vcpkg/scripts/buildsystems/vcpkg.cmake",
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        }, 
+        {
+            "name": "windows-base",
+            "displayName": "CI Windows (MSVC)",
+            "description": "CI configuration for Windows using default compiler.",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+            }
+        },
+        {
+            "name": "linux-base",
+            "displayName": "CI Linux (GCC/Clang)",
+            "description": "CI configuration for Ubuntu Linux.",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+            }
+        },
+        {
+            "name": "macos-base",
+            "displayName": "CI macOS (AppleClang)",
+            "description": "CI configuration for macOS.",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
             }
         }
     ],
     "buildPresets": [
         {
-            "name": "release",
-            "configurePreset": "release"
+            "name": "windows-base",
+            "configurePreset": "windows-base"
+        },
+        {
+            "name": "linux-base",
+            "configurePreset": "linux-base"
+        },
+        {
+            "name": "macos-base",
+            "configurePreset": "macos-base"
+        },
+        {
+            "name": "release-local",
+            "configurePreset": "release-local"
         }
     ]
 }
