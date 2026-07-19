@@ -24,6 +24,7 @@
             "name": "windows-base",
             "displayName": "CI Windows (MSVC)",
             "description": "CI configuration for Windows using default compiler.",
+            "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
@@ -45,6 +46,7 @@
             "name": "macos-base",
             "displayName": "CI macOS (AppleClang)",
             "description": "CI configuration for macOS.",
+            "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
