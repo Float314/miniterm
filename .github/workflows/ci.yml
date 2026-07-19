@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            vcpkg-triplet: x64-windows
+            artifact-name: miniterm-win64
+            binary-path: build/Release/miniterm.exe
+            cc: cl
+            cxx: cl
+          - os: ubuntu-latest
+            vcpkg-triplet: x64-linux
+            artifact-name: miniterm-linux-x64
+            binary-path: build/miniterm
+            cc: gcc
+            cxx: g++
+          - os: macos-latest
+            vcpkg-triplet: arm64-osx
+            artifact-name: miniterm-macos-arm64
+            binary-path: build/miniterm
+            cc: gcc-14
+            cxx: g++-14
+
+    runs-on: ${{ matrix.os }}
+
+    env:
+      VCPKG_DEFAULT_TRIPLET: ${{ matrix.vcpkg-triplet }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: a1a1cbc986e4c9f438c67c9e8e64e34f4c9e3c13
+
+      - name: Install OpenSSL (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install openssl -y --no-progress
+          echo "OPENSSL_ROOT_DIR=C:/Program Files/OpenSSL-Win64" >> $env:GITHUB_ENV
+
+      - name: Install OpenSSL (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev
+
+      - name: Install GCC (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install gcc
+          echo "CC=$(brew --prefix gcc)/bin/gcc-14" >> $GITHUB_ENV
+          echo "CXX=$(brew --prefix gcc)/bin/g++-14" >> $GITHUB_ENV
+
+      - name: Install OpenSSL (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "OPENSSL_ROOT_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
+
+
+      - name: Install vcpkg dependencies
+        run: vcpkg install curl libgit2
+
+      - name: Configure CMake
+        run: >-
+          cmake -S . -B build
+          -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_C_COMPILER=${{ matrix.cc }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake
+          -DVCPKG_MANIFEST_MODE=OFF
+          -DOPENSSL_ROOT_DIR=${{ env.OPENSSL_ROOT_DIR }}
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.binary-path }}
+          if-no-files-found: error

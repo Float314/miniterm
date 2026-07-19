@@ -1,0 +1,9 @@
+{
+    "name": "miniterm",
+    "version-string": "1.0.0",
+    "description" : "Minimal Terminal made in C++",
+    "dependencies": [
+        "curl",
+        "libgit2"
+    ]
+}
